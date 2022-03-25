@@ -1,5 +1,8 @@
 # Modern-Java-in-Action
 
+# 레퍼런스
+- [원문 및 예제소스](https://livebook.manning.com/book/modern-java-in-action)
+
 # 목차
 
 ## Part Ⅰ 기초
