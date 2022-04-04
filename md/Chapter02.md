@@ -1,4 +1,4 @@
-# [Chapter 02](https://livebook.manning.com/book/modern-java-in-action/chapter-2?origin=product-preview-toc)
+# [Chapter 02](https://livebook.manning.com/book/modern-java-in-action/chapter-2/)
 
 ## 동작 파라미터화 코드 전달하기
 

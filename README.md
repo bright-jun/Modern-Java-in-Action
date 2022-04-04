@@ -13,8 +13,8 @@
 
 ## Part Ⅱ 함수형 데이터 처리
 
-* [Chapter 4 - 스트림 소개]()
-* [Chapter 5 - 스트림 활용]()
+* [Chapter 4 - 스트림 소개](./md/Chapter04.md)
+* [Chapter 5 - 스트림 활용](./md/Chapter05.md)
 * [Chapter 6 - 스트림으로 데이터 수집]()
 * [Chapter 7 - 병렬 데이터 처리와 성능]()
 
