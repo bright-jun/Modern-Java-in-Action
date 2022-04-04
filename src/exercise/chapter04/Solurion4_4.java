@@ -36,18 +36,27 @@ public class Solurion4_4 {
         // filter, distinct, limit는 스트림을 반환하며 서로 연결할수 있다
         // 최종 연산
         // count. 스트림 파이프라인의 마지막 연산 count는 스트림이 아닌 long을 반환한다.
+        System.out.println(">>> names2");
         List<String> names2 =
             menu.stream()
                 .filter(dish -> {
                     // 필터링한 요리명을 출력한다
-                    System.out.println("filtering:" + dish.getName());
-                    return dish.getCalories() > 300;
+                    System.out.println(
+                        "filtering 200:" + dish.getName() + "," + dish.getCalories());
+                    return dish.getCalories() > 200;
+                })
+                .filter(dish -> {
+                    // 필터링한 요리명을 출력한다
+                    System.out.println(
+                        "filtering 500:" + dish.getName() + "," + dish.getCalories());
+                    return dish.getCalories() > 500;
                 })
                 .map(dish -> {
                     // 추출한 요리명을 출력한다
-                    System.out.println("mapping:" + dish.getName());
+                    System.out.println("mapping:" + dish.getName() + "," + dish.getCalories());
                     return dish.getName();
                 })
+                // stream size가 3이 될때까지 중간연산 실행
                 .limit(3)
                 .collect(toList());
         System.out.println(names2);
