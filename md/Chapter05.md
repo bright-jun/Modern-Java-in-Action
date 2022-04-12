@@ -68,7 +68,9 @@
 - `flatMap`은 각 배열을 스트림이 아니라 스트림의 콘텐츠로 매핑한다.
 - 즉, `map(Arrays::stream)` 과 달리 `flatMap`은 하나의 평면화된 스트림을 반환한다.
 - 스트림의 각 값을 다른 스트림으로 만든 다음에 모든 스트림을 하나의 스트림으로 연결하는 기능을 수행한다.
+
 - ![그림 5-6 flatMap을 이용해서 단어 리스트에서 고유 문자 찾기](https://drek4537l1klr.cloudfront.net/urma2/Figures/05fig06_alt.jpg)
+
 - 10장에서는 `null`을 확인하는 새로운 라이브러리 클래스인 `Optional`이라는 고급 자바 8 패턴 을 설명하면서 `flatMap`을 다시 설명한다.
 
 ### 5.4 검색과 매칭
@@ -126,11 +128,14 @@
 - 왜 Optional〈Integer〉를 반환하는 걸까?
 - 스트림에 아무 요소도 없는 상황을 생각해보자. 이런 상황이라면 초깃값이 없으므로 reduce는 합계를 반환할 수 없다. 따라서 합계가 없음을 가리킬 수 있도록 Optional 객체로 감싼 결과를 반환한다.
 
+[java-functional-interface](https://johngrib.github.io/wiki/java-functional-interface/)
+
 #### 5.5.2 최댓값과 최솟값
 
 - reduce는 두 인수를 받는다.
   - 초깃값
   - 스트림의 두 요소를 합쳐서 하나의 값으로 만드는 데 사용할 람다
+
 ![그림 5-8 리듀싱 연산: 최댓값 계산](https://drek4537l1klr.cloudfront.net/urma2/Figures/05fig08_alt.jpg)
 
 > `reduce` 메서드의 장점과 병렬화
@@ -164,3 +169,5 @@
    - 이러한 연산을 내부 상태를 갖는 연산(stateful operation) 이라 한다
 
 // TODO
+
+// TODO foreach vs reduce
