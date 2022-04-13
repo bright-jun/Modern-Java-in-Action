@@ -227,3 +227,164 @@ Map<Dish.Type, Integer> totalCaloriesByType =
 ```
 - 이 외에도 `mapping` 메서드로 만들어진 컬렉터도 `groupingBy`와 자주 사용된다
 - 스트림의 인수를 변환하는 함수와, 변환 함수의 결과 객체를 누적하는 컬렉터를 인수로 받는다.
+
+### 6.4 분할
+
+- 분할은 분할함수(partitioning funtion)라 불리는 프레디케이트를 분류 함수로 사용하는 _특수한 그룹화_ 기능이다
+- 분할 함수는 불리언을 반환하므로 맵의 키 형식은 `Boolean`이다.
+- 결과적으로 그룹화 맵은 최대 (참 아니면 거짓의 값을 갖는) 두 개의 그룹으로 분류된다.
+  - 더 간결하고 효과적
+
+#### 6.4.1 분할의 장점
+
+- 분할 함수가 반환하는 참，거짓 두 가지 요소의 스트림 리스트를 모두 유지
+
+#### 6.4.2 숫자를 소수와 비소수로 분할하기
+
+![표 6-1-1](../res/img/table6-1-1.bmp)
+![표 6-1-1](../res/img/table6-1-2.bmp)
+
+- 모든 컬렉터는 Collector 인터페이스를 구현
+
+### 6.5 Collector 인터페이스
+
+- Collector 인터페이스는 리듀싱 연산（즉，컬렉터）을 어떻게 구현할지 제공하는 메서드 집합으로 구성
+- `toList`
+
+```java
+public interface Collector<T, A, R> {
+    Supplier<A> supplier();
+    BiConsumer<A, T> accumulator();
+    Function<A, R> finisher();
+    BinaryOperator<A> combiner();
+    Set<Characteristics> characteristics();
+}
+```
+- T는 수집될 스트림항목의 제네릭 형식이다.
+- A는 누적자, 즉 수집 과정에서중간 결과를 누적하는 객체의 형식이다.
+- R은 수집 연산 결과 객체의 형식 (항상 그런 것은 아니지만 대개 컬렉션 형식)이다.
+
+```java
+public class ToListCollector<T> implements Collector<T, List<T>, List<T>>
+```
+- Stream<T>의 모든  요소를
+- List<T>로 수집
+
+#### 6.5.1 Collector 인터페이스의 메서드 살펴보기
+
+### `Supplier<A> supplier()`
+
+- 새로운 결과 컨테이너 만들기
+```java
+public Supplier<List<T>> supplier() {
+    return () -> new ArrayList<T>();
+}
+```
+```java
+public Supplier<List<T>> supplier() {
+    return ArrayList::new;
+}
+```
+
+### `BiConsumer<A, T> accumulator()`
+
+- 결과 컨테이너에 요소 추가하기
+```java
+public BiConsumer<List<T>, T> accumulator(){
+    return(list,item)->list.add(item);
+}
+```
+```java
+public BiConsumer<List<T>, T> accumulator() {
+    return List::add;
+}
+```
+
+### `Function<A, R> finisher()`
+
+- 최종 변환값을 결과 컨테이너로 적용하기
+```java
+public Function<List<T>, List<T>> finisher() {
+    return Function.identity();
+}
+```
+
+![그림 6-7 순차 리듀싱 과정의 논리적 순서](https://drek4537l1klr.cloudfront.net/urma2/Figures/06fig07_alt.jpg)
+
+### `BinaryOperator<A> combiner()`
+
+- 두 결과 컨테이너 병합
+```java
+public BinaryOperator<List<T>> combiner() {
+    return (list1, list2) -> {
+        list1.addAll(list2);
+        return list1; }
+}
+```
+
+![그림 6-8 병렬화 리듀싱 과정에서 combiner 메서드 활용](https://drek4537l1klr.cloudfront.net/urma2/Figures/06fig08_alt.jpg)
+
+- 병렬화에서 사용
+  - toList의 combiner는 비교적 쉽게 구현할 수 있다.
+  - 스트림의 두 번째 서브 파트에서 수집한 항목 리스트를 첫 번째 서브파트 결과 리스트의 뒤에 추가하면 된다.
+- 스트림을 분할해야 하는지 정의하는 조건이 거짓으로 바뀌기 전까지 원래 스트림을 재귀적으로 분할한다
+  - 보통 분산된 작업의 크기가 너무 작아지면 병렬 수행의 속도는 순차 수 행의 속도보다 느려진다. 즉, 병렬 수행의 효과가 상쇄된다.
+  - 일반적으로 프로세싱 코어 의 개수를 초과하는 병렬 작업은 효율적이지 않다 
+- 이제 ［그림 6-7]에서 보여주는 것처럼 모든 서브스트람의 각 요소에 리듀싱 연산을 순차적으로 적용해서 서브스트림을 병렬로 처리할 수 있다.
+- 마지막에는 컬렉터의 combiner 메서드가 반환하는 함수로 모든 부분결과를 쌍으로 합친다.
+  - 즉，분할된 모든 서브스트림의 결과를 합치면서 연산이 완료된다.
+
+### `Set<Characteristics> characteristics()`
+
+- 컬렉터의 연산을 정의하는 `Characteristics` 형식의 불변 집합을 반환한다.
+- 스트림을 병렬로 리듀스할 것인지 그리고 병렬로 리듀스한다면 어떤 최적화를 선택해야 할지 힌트를 제공한다.
+- `Characteristics`는 다음 세 항목을 포함하는 열거형이다.
+- 컬렉터가 수행하는 작업의 속성에 대한 정보를 제공하기 위한 것 아래 세가지 속성 중 해당하는 것을 Set에 담아서 반환하도록 구현하면 됨
+```java
+public Set<Characteristics> charateristics() {
+    return Collections.unmodifiableSet(EnumSet.of(
+                 Collector.Characteristics.CONCURRENT,
+                 Collector.Characteristics.UNORDERED
+           ));
+}
+```
+- 아무런 속성도 지정하고 싶지 않은 경우
+```java
+public Set<Characteristics> characteristics() {
+    return Collections.emptySet();  // 지정할 특성이 없는 경우 비어있는 Set 반환
+}
+```
+
+1. UNORDERED
+   - 리듀싱 결과는 스트림 요소의 방문 순서나 누적 순서에 영향을 받지 않는다.
+2. CONCURRENT
+   - 다중 스레드에서 accumulator 함수를 동시에 호출할 수 있으며 이 컬렉터는 스트림의 병렬 리듀싱을 수행할 수 있다.
+   - 컬렉터의 플래그에 UNORDERED를 함께 설정 하지 않았다면 데이터 소스가 정렬되어 있지 않은（즉，집합처럼 요소의 순서가 무의미 한）상황에서만 병렬 리듀싱을 수행할 수 있다. 
+3. IDENTITY_FINISH
+   - finisher 메서드가 반환하는 함수는 단순히 identity를 적용할 뿐 이므로 이를 생략할 수 있다.
+   - 따라서 리듀싱 과정의 최종 결과로 누적자 객체를 바로 사용할 수 있다. 
+   - 또한 누적자 A를 결과 R로 안전하게 형변환할 수 있다.
+
+- ToListCollector
+  - IDENTITY_FINISH
+    - ToListCollector에서 스트림의 요소를 누적하는 데 사용한 리스트가 최종 결과 형식이므로 추가 변환이 필요 없다.
+  - UNORDERED
+    - 리스트의 순서는 상관이 없다
+  - CONCURRENT
+    - 요소의 순서가 무의미
+```java
+public Set<Characteristics> charateristics() {
+    return Collections.unmodifiableSet(EnumSet.of(
+                 Collector.Characteristics.IDENTITY_FINISH,
+                 Collector.Characteristics.CONCURRENT,
+                 Collector.Characteristics.UNORDERED
+           ));
+}
+``` 
+
+#### 6.5.2 응용하기
+
+### 6.6 커스텀 컬렉터를 구현해서 성능 개선하기
+
+#### 6.6.1 소수로만 나누기
+
