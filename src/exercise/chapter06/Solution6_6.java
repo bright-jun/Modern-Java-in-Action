@@ -78,35 +78,42 @@ public class Solution6_6 {
             IntStream.rangeClosed(2, 100).boxed().collect(Collectors.toList()), 100);
 
         long fastest = Long.MAX_VALUE;
+        Map<Boolean, List<Integer>> tempres;
+        Map<Boolean, List<Integer>> res1;
         for (int i = 0; i < 10; i++) {
             long start = System.nanoTime();
-            partitionPrimes(1000000);
+            tempres = partitionPrimes(1000000);
             long duration = (System.nanoTime() - start) / 1_000_000;
             if (duration < fastest) {
                 fastest = duration;
+                res1 = tempres;
             }
         }
         System.out.println(
             "Fastest execution done in " + fastest + " msecs");
 
+        Map<Boolean, List<Integer>> res2;
         for (int i = 0; i < 10; i++) {
             long start = System.nanoTime();
-            partitionPrimesWithCustomCollector1(1000000);
+            tempres = partitionPrimesWithCustomCollector1(1000000);
             long duration = (System.nanoTime() - start) / 1_000_000;
             if (duration < fastest) {
                 fastest = duration;
+                res2 = tempres;
             }
         }
         System.out.println(
             "Fastest execution done in " + fastest + " msecs");
 
+        Map<Boolean, List<Integer>> res3;
         for (int i = 0; i < 10; i++) {
             long start = System.nanoTime();
             // TODO 이경우는 잘 동작을 안하는 것 같다...?
-            partitionPrimesWithCustomCollector2(10000);
+            tempres = partitionPrimesWithCustomCollector2(10000);
             long duration = (System.nanoTime() - start) / 1_000_000;
             if (duration < fastest) {
                 fastest = duration;
+                res3 = tempres;
             }
         }
         System.out.println(

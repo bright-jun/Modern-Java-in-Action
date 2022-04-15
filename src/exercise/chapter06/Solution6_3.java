@@ -111,12 +111,13 @@ public class Solution6_3 {
                 .collect(groupingBy(Dish::getType,
                     maxBy(comparingInt(Dish::getCalories))));
         /*
-        TODO ?
         NOTE_ 팩토리 메서드 maxBy가 생성하는 컬렉터의 결과 형식에 따라 맵의 값이 Optional 형식이 되었다.
         실제로 메뉴의 요리 중 Optional.empty()를 값으로 갖는 요리는 존재하지 않는다
         처음부터 존재하지 않는 요리의 키는 맵에 추가되지 않기 때문이다.
         groupingBy 컬렉터는 스트림의 첫 번째 요소를 찾은 이후에야 그룹화 맵에 새로운 카를 (게으르게) 추가한다
         리듀싱 컬렉터가 반환하는 형식을 사용하는 상황이므로 굳이 Optional 래퍼를 사용할 필요가 없다
+
+        mostCaloricByType2처럼 굳이 Optional<Dish>를 반환하도록 안해도 된다.
          */
 
         Map<Dish.Type, Dish> mostCaloricByType2 =
