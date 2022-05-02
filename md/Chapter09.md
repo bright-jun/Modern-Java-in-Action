@@ -21,3 +21,27 @@
     - 람다를 통해 메시지 생성 과정을 연기할 수 있다.
     - 객체 상태가 클라이언트 코드로 노출되지 않는다
   - 실행 어라운드
+
+### 9.2 람다로 객체지향 디자인 패턴 리팩터링하기
+
+- 다양한 패턴을 유형별로 정리한 것이 디자인 패턴(design pattern)이다
+  - 방문자 디자인 패턴(visitor design pattern)
+    - 구조체와 동작하는 알고리즘을 서로 분리하고 싶을 때
+  - 싱글턴 패턴(singleton pattern)
+    - 클래스 인스턴스화를 하나의 객체로 제한
+
+- 전략 (strategy)
+- 템플릿 메서드(template method)
+- 옵저버 (observer)
+- 의무 체인(chain of responsibility)
+- 팩토리 (factory)
+
+#### 9.2.1 전략
+
+- 전략 패턴은 한 유형의 알고리즘을 보유한 상태에서 런타임에 적절한 알고리즘을 선택하는 기법이다.
+![그림 9.1 전략 디자인 패턴](https://drek4537l1klr.cloudfront.net/urma2/Figures/09fig01_alt.jpg)
+- 알고리즘을 나타내는 인터페이스(Strategy 인터페이스)
+- 다양한 알고리즘을 나타내는 한 개 이상의 인터페이스 구현(ConcreteStrategyA, ConcreteStrategyB)같은 구체적인 구현 클래스
+- 전략 객체를 사용하는 한 개 이상의 클라이언트
+- Validationstrategy 는 함수형 인터페이스며 Predicate<String>과 같은 함수 디스크립터를 갖고 있음을 파악했을 것이다. 따라서 다양한 전략을 구현하는 새로운 클래스를 구현할 필요없이 람다 표현식을 직접 전달하면 코드가 간결해진다.
+
