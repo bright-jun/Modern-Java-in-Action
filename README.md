@@ -22,7 +22,7 @@
 
 * [Chapter 8 - 컬렉션 API 개선](./md/Chapter08.md)
 * [Chapter 9 - 리팩터링, 테스팅, 디버깅](./md/Chapter09.md)
-* [Chapter 10 - 람다를 이용한 도메인 전용 언어]()
+* [Chapter 10 - 람다를 이용한 도메인 전용 언어](./md/Chapter10.md)
 
 ## Part Ⅳ 매일 자바와 함께
 
