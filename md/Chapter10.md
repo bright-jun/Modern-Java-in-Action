@@ -151,16 +151,266 @@
 
 ## 10.2 최신 자바 API의 작은 DSL
 
+### 네이티브 자바 API
+
+- 함수형 인터페이스 : 한 개의 추상 메서드를 가진 인터페이스
+  - 불필요한 코드가 추가
+  - 람다와 메서드 참조 -> DSL 관점에서 가독성 높은 코드 작성 가능
+- 정렬 도메인의 최소 DSL
+  - 람다와 메서드 참조를 이용
+  - 가독성, 재사용성, 결합성이 높아짐
+
+### 10.2.1 스트림 API는 컬렉션을 조작하는 DSL
+
+#### Stream 인터페이스
+
+- 네이티브 자바 API에 작은 내부 DSL을 적용한 좋은 예
+- 컬렉션의 항목을 필터, 정렬, 변환, 그룹화, 조작하는 작지만 강력한 DSL
+- 스트림 API의 플루언트 형식
+  - 잘 설계된 DSL의 또 다른 특징이다
+  - 모든 중간 연산은 게으르며 다른 연산으로 파이프라인이 될 수 있는 스트림으로 반환된다.
+  - 최종 연산은 적극적이며 전체 파이프라인이 계산을 일으킨다.
+
+### 10.2.2 데이터를 수집하는 DSL인 Collectors
+
+#### Collector 인터페이스
+
+- 데이터 수집을 수행하는 DSL로 간주
+- 중첩된 그룹화 수준에 반대로 그룹화 함수를 구현해야 하므로 유틸리티 사용 코드가 직관적이지 않다. 자바 형식 시스템으로는 이런 순서 문제를 해결할 수 없다.
+- [??? TODO] 그룹화 수준 순서랑 코드 순서가 다른데 어떻게 다른지 이해가 잘 안감
+
+## 10.3 자바로 DSL을 만드는 패턴과 기법
+
+### 10.3.1 메서드체인
+
+- 플루언트 API로 도메인 객체를 만드는 몇개의 빌더를 구현
+- 장점
+  - 사용자가 미리 지정된 절차에 따라 플루언트 API의 메서드를 호출하도록 강제한다.
+  - 덕분에 사용자가 다음 거래를 설정하기 전에 기존 거래를 올바로 설정하게 된다.
+  - 이 접근 방법은 주문에 사용한 파라미터가 빌더 내부로 국한된다는 다른 잇점도 제공한다.
+  - 이 접근 방법은 정적 메서드 사용을 최소화하고 메서드 이름이 인수의 이름을 대신하도록 만듦으로 이런 형식의 DSL의 가독성을 개선하는 효과를 더한다. 마지막으로 이런 기법을 적용한 플루언트 DSL에는 분법적 잡음이 최소화된다.
+- 단점
+  - 안타깝게도 빌더를 구현해야 한다는 것이 메서드 체인의 단점이다.
+  - 상위 수준의 빌더를 하위 수준의 빌더와 연결할 접착 많은 접착 코드가 필요하다.
+  - 도메인의 객체의 중첩 구조와 일치하게 들여쓰기를 강제하는 방법이 없다는 것도 단점이다.
+
+### 10.3.2 중첩된 함수이용
+
+- 다른 함수 안에 함수를 이용해 도메인 모델을 만든다
+- 장점
+  - 메서드 체인에 비해 함수의 중첩 방식이 도메인 객체 계층 구조에 그대로 반영
+  - 예제에서 주문은 한 개 이상의 거래를 포함하며 각 거래는 한 개의 주식을 참조
+- 단점
+  - 결과 DSL에 더 많은 괄호를 사용해야 한다
+  - 더욱이 인수 목록을 정적 메서드에 넘겨줘야 한다는 제약
+  - 도메인 객체에 선택 사항 필드가 있으면 인수를 생략할 수 있으므로 이 가능성을 처리할 수 있도록 여러 메서드 오버라이드를 구현해야 한다.
+  - 마지막으로 인수의 의미가 이름이 아니라 위치에 의해 정의되었다.
+    - NestedFunctionOrderBuilder의 at(), on() 메서드에서 했던 것처럼 인수의 역할을 확실하게 만드는 여러 더미 메서드를 이용해 마지막 문제를 조금은 완화할 수 있다.
+
+### 10.3.3 람다 표현식을 이용한 함수 시퀀싱
+
+- 람다 표현식으로 정의한 함수 시퀀스를 사용
+- 람다 표현식을 받아 실행해 도메인 모델을 만들어 내는 여러 빌더를 구현해야 한다
+- DSL 구현해서 했던 방식과 마찬가지로 이들 빌더는 메서드 체인 패턴을 이용해 만들려는 객체의 중간 상태를 유지
+- Consumer 객체를 빌더가 인수로 받음으로 DSL 사용자가 람다 표현식 으로 인수를 구현
+- 장점
+  - 메서드 체인 패턴처럼 플루언트 방식으로 거래 주문을 정의할 수 있다.
+  - 중첩 함수 형식처럼 다양한 람다 표현식의 중첩 수준과 비슷하게 도메인 객체의 계층 구조를 유지한다.
+- 단점
+  - 많은 설정 코드가 필요
+  - DSL 자체가 자바 8 람다 표현식 문법에 의한 잡음의 영향을 받는다
+
+### 10.3.4 조합하기
+
+- 지금까지 살펴본 것처럼 세가지 DSL 패턴 각자가 장단점을 갖고 있다. 하지만 한 DSL에 한 개의 패턴만 사용하라는 법은 없다.
+- 장점
+  - 여러 패턴의 장점을 이용할 수 있다
+- 단점
+  - 결과 DSL이 여러 가지 기법을 혼용하고 있으므로 한 가지 기법을 적용한 DSL에 비해 사용자가 DSL을 배우는데 오랜 시간이 걸린다
+
+### 10.3.5 DSL에 메서드 참조 사용하기
+
+- 주식 거래 도메인 모델에 다른 간단한 기능을 추가
+- 메서드 참조
+  - 읽기 쉽고 코드를 간결하게 만든다
+  - 유연성도 제공한다.
+  - 새로운 세금 함수를 Tax 클래스에 추가해도 함수형 TaxCalculator를 바꾸지 않고 바로 사용할 수 있다 
+
+### 요약
+
+![표 10-1](../res/img/table10-1.bmp)
+
+## 10.4  실생활의 자바 8 DSL
+
+### 10.4.1 jOOQ(Java Object Oriented Querying)
+
+- SQL 매핑 도구
+- SQL을 구현하는 내부적 DSL로 자바에 직접 내장된 형식 안전 언어
+- ```roomsql
+  SELECT * FROM BOOK
+  WHERE BOOK.PUBLISHED_IN = 2016
+  ORDER BY BOOK.TITLE
+  ```
+- jOOQ DSL을 이용해 위 질의를 다음처럼 구현할 수 있다
+- ```java
+  create.selectFrom(BOOK)
+        .where(BOOK.PUBLISHED_IN.eq(2016))
+        .orderBy(BOOK.TITLE)
+  ```
+- 스트림 API와 조합해 사용할 수 있다
+- ```java
+  Class.forName("org.h2.Driver");
+  try (Connection c =
+         getConnection("jdbc:h2:~/sql-goodies-with-mapping", "sa", "")) {
+      DSL.using(c)
+         .select(BOOK.AUTHOR, BOOK.TITLE)
+         .where(BOOK.PUBLISHED_IN.eq(2016))
+    .orderBy(BOOK.TITLE)
+    .fetch()
+    .stream()
+    .collect(groupingBy(
+         r -> r.getValue(BOOK.AUTHOR),
+         LinkedHashMap::new,
+         mapping(r -> r.getValue(BOOK.TITLE), toList())))
+         .forEach((author, titles) ->
+      System.out.println(author + " is author of " + titles));
+  }
+  ```
+
+- [jOOQ vs. Hibernate: When to Choose Which](https://blog.jooq.org/jooq-vs-hibernate-when-to-choose-which/)
+- [QueryDSL vs. jOOQ. Feature Completeness vs. Now More Than Ever](https://blog.jooq.org/querydsl-vs-jooq-feature-completeness-vs-now-more-than-ever/)
+
+### 10.4.2 큐컴버
+
+- 동작 주도 개발(behavior-driven-development)프레임워크
+- 명령문을 실행할 수 있는 테스트 케이스로 변환
+- 테스트 시나리오를 정의하는 스크립트는 제한된 수의 키워드를 제공하며 자유로운 형식으로 문장을 구현할 수 있는 외부 DSL을 활용
+- BDD는 우선 순위에 따른，확인할 수 있는 비즈니스 가치를 전달하는 개발 노력에 집중하며 비즈니스 어휘를 공유함으로 도메인 전문가와 프로그래머 사이의 간격을 줄인다.
 
 
-## 10.3
+- Given
+  - 전제 조건 정의
+- When
+  - 시험하려는 도메인 객체의 실질 호출
+- Then
+  - 테스트 케이스의 결과를확인하는 어설션(assertion)
+
+```java
+Feature: Buy stock
+  Scenario: Buy 10 IBM stocks
+    Given the price of a "IBM" stock is 125$
+    When I buy 10 "IBM"
+    Then the order value should be 1250$
+```
+```java
+public class BuyStocksSteps {
+    private Map<String, Integer> stockUnitPrices = new HashMap<>();
+    private Order order = new Order();
+
+    @Given("^the price of a \"(.*?)\" stock is (\\d+)\\$$")
+    public void setUnitPrice(String stockName, int unitPrice) {
+        stockUnitValues.put(stockName, unitPrice);
+    }
+
+    @When("^I buy (\\d+) \"(.*?)\"$")
+    public void buyStocks(int quantity, String stockName) {
+        Trade trade = new Trade();
+        trade.setType(Trade.Type.BUY);
+
+        Stock stock = new Stock();
+        stock.setSymbol(stockName);
+
+        trade.setStock(stock);
+        trade.setPrice(stockUnitPrices.get(stockName));
+        trade.setQuantity(quantity);
+        order.addTrade(trade);
+    }
+
+    @Then("^the order value should be (\\d+)\\$$")
+    public void checkOrderValue(int expectedValue) {
+        assertEquals(expectedValue, order.getValue());
+    }
+}
+```
+```java
+public class BuyStocksSteps implements cucumber.api.java8.En {
+    private Map<String, Integer> stockUnitPrices = new HashMap<>();
+    private Order order = new Order();
+    public BuyStocksSteps() {
+        Given("^the price of a \"(.*?)\" stock is (\\d+)\\$$",
+              (String stockName, int unitPrice) -> {
+                  stockUnitValues.put(stockName, unitPrice);
+        });
+        // ... When and Then lambdas omitted for brevity
+    }
+}
+```
+
+- 큐컴버의 DSL은 아주 간단하지만
+- 외부적 DSL과 내부적 DSL이 어떻게 효과적으로 합쳐질 수 있으며
+  - 외부적 DSL : 큐컴버
+  - 내부적 DSL : 네이티브 자바 API
+- 람다와 함께 가독성 있는 함축된 코드를 구현
+
+### 10.4.3 스프링 통합
+
+- 엔터프라이즈 통합 패턴(Enterprise Integration Patterns)을 구현하는 도구
+- 스프링 통합(Spring Integration)은 유명한 엔터프라이즈 통합 패턴을 지원할 수 있도록 의존성 주입에 기반한 스프링 프로그래밍 모델을 확장한다
+- 복잡한 엔터프라이즈 통합 솔루션을 구현하는 단순한 모델을 제공
+- 비동기, 메시지 주도 아키텍처를 쉽게 적용할 수 있게 도움
+- 메시지 기반의 애플리케이션에 필요한 가장 공통 패턴을 모두 구현
 
 
+- 메서드 체인, 함수 시퀀싱과 람다 표현식 사용
 
-## 10.4
+```java
+@Configuration
+@EnableIntegration
+public class MyConfiguration {
 
+    @Bean
+    public MessageSource<?> integerMessageSource() {
+        MethodInvokingMessageSource source =
+                new MethodInvokingMessageSource();
+        source.setObject(new AtomicInteger());
+        source.setMethodName("getAndIncrement");
+        return source;
+    }
 
+    @Bean
+    public DirectChannel inputChannel() {
+        return new DirectChannel();
+    }
 
-## 10.5
+    @Bean
+    public IntegrationFlow myFlow() {
+        return IntegrationFlows
+                   .from(this.integerMessageSource(),
+                         c -> c.poller(Pollers.fixedRate(10)))
+                   .channel(this.inputChannel())
+                   .filter((Integer p) -> p % 2 == 0)
+                   .transform(Object::toString)
+                   .channel(MessageChannels.queue("queueChannel"))
+                   .get();
+    }
+}
+```
+```java
+@Bean
+public IntegrationFlow myFlow() {
+    return flow -> flow.filter((Integer p) -> p % 2 == 0)
+                       .transform(Object::toString)
+                       .handle(System.out::println);
+}
+```
+ 
 
+## 10.5 마치며
 
+- DSL의 주요 기능은 개발자와 도메인 전문가 사이의 간격을 좁히는 것이다. 애플리케이션의 비즈니스 로직을 구현하는 코드를 만든 사람이 프로그램이 사용될 비즈니스 필드의 전문 지식을 갖추긴 어렵다. 개발자가 아닌 사람도 이해할 수 있는 언어로 이런 비즈니스 로직을 구현할 수 있다고 해서 도메인 전문가가 프로그래머가 될 수 있는 것은 아니지만 적에도 로직을 읽고 검증하는 역할은 할 수 있다.
+- DSL은 크게 내부적 (DSL이 사용될 애플리케이션을 개발한 언어를 그대로 활용) DSL과 외부적 (직접 언어를 설계해 사용함) DSL로 분류할 수 있다. 내부적 DSL은 개발 노력 이적게 드는 반면 호스팅 언어의 문법 제약& 받는다. 외부적 DSL은 높은 유연성을 제공하지만 구현하기가 어렵다.
+- JVM에서 이용할 수 있는 스칼라, 그루비 등의 다른 언어로 다중 DSL을 개발할 수 있다. 이들 언어는 자바보다 유연하며 간결한 편이다. 하지만 이들을 자바와 통합하려면 빌드과정이 복잡해지며 자바와의 상호 호환성 문제도 생길 수 있다.
+- 자바의 장황함과 문법적 엄격함 때문에 보통 자바는 내부적 DSL을 개발하는 언어로는 적합하지 않다. 하지만 자바 8의 람다 표현 식과 메서 등 참조 덕분에 상황이 많이 개선되었다.
+- 최신 자바는 자체 API에 작은 DSL을 제공한다. 이들 Stream, Collectors 클래스 등에서 제공하는 작은 DSL은특히 컬렉션 데이터의 정렬, 필터링, 변환, 그룹화에 유용하다.
+- 자바로 DSL을 구현할 때 보통 메서드 체인, 중첩 함수, 함수 시퀀싱 세 가지 패턴이 사용된다. 각각의 패턴은 장단점이 있지만 모든 기법을 한 개의 DSL에 합쳐 장점만을 누릴 수 있다.
+- 많은 자바 프레임워크와 라이브러리를 이을 통해 이용할 수 있다. 10장에서는 SQL 매핑 도구인 jOOQ, BDD 프레임워크 큐컴버, 엔터프라이즈 통합 패턴을 구현한 스프링 확장인 스프링 통합을 살펴봤다.
