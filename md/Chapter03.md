@@ -1,6 +1,6 @@
 # [Chapter 03](https://livebook.manning.com/book/modern-java-in-action/chapter-3/)
 
-## 람다 표현식
+# 람다 표현식
 
 - 메서드로 전달할 수 있는 익명 함수를 단순화한 것
     - 익명
