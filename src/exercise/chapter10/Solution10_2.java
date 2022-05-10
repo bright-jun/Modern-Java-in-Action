@@ -33,8 +33,7 @@ public class Solution10_2 {
         // 메서드 참조
         Collections.sort(persons, comparing(Person::getAge));
         // 역순
-        // FIXME 실행이 안됨
-//        Collections.sort(persons, comparing(Person::getAge).reverse());
+        Collections.sort(persons, comparing(Person::getAge).reversed());
         // 나이순 + 이름순
         Collections.sort(persons, comparing(Person::getAge)
             .thenComparing(Person::getName));
