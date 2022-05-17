@@ -98,6 +98,7 @@
 >   }
 > }
 > ```
+- Q:optional 쓰면 안되는 경우?
 
 ### 11.3.4 Optional 스트림 조작
 
@@ -106,6 +107,8 @@
 ### 11.3.6 두 Optional 합치기
 
 ### 11.3.7 필터로 특정값 거르기
+
+- Q: getName하면 빈 optional은 filter자체를 안하는건지?
 
 ## 11.4 Optional을 사용한 실용 예제
 
