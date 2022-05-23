@@ -47,23 +47,68 @@
 ## 12.2 날짜 조정, 파싱, 포매팅
 
 - 함수형 갱신
-  - 이런 `with` 메서드는 기존의 Temporal 객체를 바꾸는 것이 아니라 필드를 갱신한 복사본을 만든다
+    - 이런 `with` 메서드는 기존의 Temporal 객체를 바꾸는 것이 아니라 필드를 갱신한 복사본을 만든다
 - ![표 12-2 특정 시점을 표현하는 날짜 시간 클래스의 공통 메서드](../res/img/table12-2.bmp)
 
 ### 12.2.1 TemporalAdjusters 사용하기
 
 - ![표 12-3 TemporalAdjusters 클래스의 팩토리 메서드](../res/img/table12-3.bmp)
 - https://docs.oracle.com/javase/8/docs/api/java/time/temporal/TemporalAdjusters.html
+- ofDateAdjuster(UnaryOperator<LocalDate> dateBasedAdjuster)
+    - 동일한 반환형 타입
+    - 함수형 갱신
 
 ### 12.2.2 날짜와 시간 객체 출력과 파싱
 
+- `java.time.format`
+- `DateTimeFormatter`
+- 정적 팩토리 메서드와 상수를 이용해서 손쉽게 포매터를 만들 수 있다.
+- `DateTimeFormatter` 클래스는 `BASIC_ISO_DATE`와 `ISO_LOCAL_DATE` 등의 상수를 미리 정의
+- 날짜나 시간을 특정 형식의 문자열로 만들 수 있다
+
 ## 12.3 다양한 시간대와 캘린더 활용 방법
+
+- 시간대를 간단하게 처리할 수 있다
+- `java.util.TimeZone`를 대체하는 `java.time.Zoneld`
+- 서머타임(Daylight Saving Time(DST)) 같은 복잡한 사항이 자동으로 처리된다
+- 불변 클래스
 
 ### 12.3.1 시간대사용하기
 
+- 지역 ID는 '{지역}/{도시}' 형식
+    - https://www.iana.org/time-zones 참고
+
+- ![그림 12-1 ZonedDateTime의 개념](https://drek4537l1klr.cloudfront.net/urma2/Figures/12fig01_alt.jpg)
+
 ### 12.3.2 UTC/Greenwich 기준의 고정 오프셋
 
+- UTC(Universal Time Coordinated, 협정 세계시) /GMT(Greenwich Mean Time, 그리니치 표준시) 를 기준 으로 시간대를 표현
+- `ZoneOffset` 으로는 서머타임을 제대로 처리할 수 없으므로 권장하지 않는 방식
+
 ### 12.3.3 대안 캘린더 시스템 사용하기
+
+- ISO-8601 캘린더 시스템은 실질적으로 전 세계에서 통용된다.
+- 자바 8에서는 추가로 4 개의 캘린더 시스템을 제공
+    1. `ThaiBuddhistDate`
+    2. `MinguoDate`
+    3. `JapaneseDate`
+    4. `HijrahDate`
+- 위 4개의 클래스와 `LocalDate` 클래스는 `ChronoLocalDate` 인터페이스를 구현
+    - 임의의 연대기에서 특정 날짜를 표현할 수 있는 기능을 제공하는 인터페이스
+- `Chronology`
+    - 캘린더 시스템
+
+
+- 날짜와 시간 API의 설계자는 `ChronoLocalDate`보다는 `LocalDate`를 사용하라고 권고한다. 예를 들어 개발자는 1 년은 12개월로 이루어져 있으며 1 달은
+  31 일 이하 이거나, 최소한 1 년은 정해진 수의 달로 이루어졌을 것이라고 가정할 수 있다. 하지만 이와 같은 가정은 특히 멀티 캘린더 시스템에서는 적용되지 않는다. 따라서
+  프로그램의 입출력을 지역화하는 상황을 제외하고는 모든 데이터 저장, 조작, 비즈니스 규칙 해석 등의 작업에서 `LocalDate`를 사용해야 한다.
+
+- HijrahDate(이슬람력)
+    - 가장 복잡
+    - 변형(variant) 의 존재
+        - 태음월(lunar month)에 기초
+        - 새로운 달(month)을 결정할 때 새로운 달(month)을 전 세계 어디에서나 볼 수 있는지 아니면 사우디아라비아에서 처음으로 새로운 달을 볼 수 있는지 등의
+          변형 방법을 결정하는 메서드를 제공
 
 ## 12.4 마치며
 
