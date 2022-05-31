@@ -85,6 +85,7 @@ public interface Resizable {
     2. 바이너리 호환성은 유지가 된다
         1. 새로 추가된 메서드를 호출하지만 않으면 새로운 메서드 구현이 없이도 기존 클래스 파일 구현이 잘 동작한다는 의미
         2. 즉 새로 추가된 메서드를 호출하면 런타임 에러가 발생
+        3. [TODO] 해당 런타임에러는 어떻게 발생시킬 수 있는지? 컴파일 에러가 발생함
 2. `Ellipse`를 포함하는 전체 애플리케이션을 재빌드할 때 다음과 같은 컴파일 에러가 발생
     1. ```
    java: exercise.chapter13.Ellipse is not abstract and does not override abstract method
