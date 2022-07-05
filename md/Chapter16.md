@@ -254,6 +254,8 @@ public Double call(){
     }});
 ```
 
+?? 장점 : 
+
 ### 16.4.6 타임아웃 효과적으로 사용하기
 
 ![](https://drek4537l1klr.cloudfront.net/urma2/Figures/java.jpg)
@@ -266,7 +268,7 @@ Future<Double> futurePriceInUSD=
     ()->exchangeService.getRate(Money.EUR,Money.USD)),
     (price,rate)->price*rate
     ))
-    //  3초뒤에 작업이 완료s|지 않으면 Future가 TimeoutException 을 발생시키도록 설정.
+    // 3초뒤에 작업이 완료되지 않으면 Future가 TimeoutException 을 발생시키도록 설정.
     // 자바9에서는비동기 타임아웃관리 기능이 추가됨
     .orTimeout(3,TimeUnit.SECONDS);
 ```
@@ -330,8 +332,11 @@ findPricesStream("myPhone").map(f->f.thenAccept(System.out::println));
 CompletableFuture[]futures=findPricesStream("myPhone")
     .map(f->f.thenAccept(System.out::println))
     .toArray(size->new CompletableFuture[size]);
+    // 실행완료 전부 기다렸다가 실행
     CompletableFuture.allOf(futures).join();
 ```
+
+- `allOf` <-> `anyOf`
 
 ### 16.5.2 응용
 

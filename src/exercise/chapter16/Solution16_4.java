@@ -26,18 +26,21 @@ public class Solution16_4 {
 
     public List<String> findPrices1(String product) {
         return shops.stream()
-            // 각 상점에서 할인 전 가격 얻기.
+            // 각 상점에서 할인 전 가격 얻기. 5s
             .map(shop -> shop.getPrice(product))
             // 상점에서 반환한 문자열을 Quote 객체로 변환한다
             .map(Quote::parse)
-            // Discount 서비스를 이용해서 각 Quote에 할인을 적용한다
+            // Discount 서비스를 이용해서 각 Quote에 할인을 적용한다 5s
             .map(Discount::applyDiscount).collect(toList());
     }
 
     public List<String> findPrices2(String product) {
         List<CompletableFuture<String>> priceFutures = shops.stream()
+                // customExcutor 정의해서 수행 태스크 설정 -> CPU 사용 극대화
             .map(shop -> CompletableFuture.supplyAsync(() -> shop.getPrice(product), executor))
+                // thenApply
             .map(future -> future.thenApply(Quote::parse))
+                // thenCompose
             .map(future -> future.thenCompose(
                 quote -> CompletableFuture.supplyAsync(() -> Discount.applyDiscount(quote),
                     executor)))
