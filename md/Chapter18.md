@@ -229,9 +229,209 @@ Optional<Transaction> mostExpensive =
 
 ### 18.2.3 객체지향 프로그래밍과 함수형 프로그래밍
 
+함수형 프로그래밍 vs 기존의 익스트림 객체지향 프로그래밍
+
+- 자바 8은 함수형 프로그래밍을 익스트림 객체지향 프로그래밍의 일종으로 간주
+- 대부분의 자바 프로그래머는 무의식적으로 함수형 프로그래밍의 일부 기능과 익스트림 객체지향 프로그래밍의 일부 기능을 사용하게 될 것
+- 자바 소프트웨어 엔지니어의 프로그래밍 형식이 좀 더 함수형으로 다가갈 것
+  - (멀티코어 등의) 하드웨어 변경
+  - (데이터베이스의 질의와 비슷한 방식으로 데이터를 조작하는 등의) 프로그래머의 기대치
+
+익스트림 객체지향 방식
+
+- 모든 것을 객체로 간주하고 프로그램이 객체의 필드를 갱신하고, 메서드를 호출하고, 관련 객체를 갱신하는 방식으로 동작
+
+함수형 프로그래밍 방식
+
+- 참조적 투명성을 중시하는, 즉, 변화를 허용하지 않는 함수형 프로그래밍 형식
+
+실제로 자바 프로그래머는 이 두 가지 프로그래밍 형식을 혼합
+
+- `Iterator`로 가변 내부 상태를 포함하는 자료구조를 탐색하면서 함수형 방식으로 자료구조에 들어 있는 값의 합계를 계산할 수 있다
+  - 자바에서는 지역 변수 변화가 수반될 수 있다
+
 ### 18.2.4 함수형 실전 연습
 
+함수형 프로그래밍의 기능
+
+- 모듈성이 좋고 멀티코어 프로세서에 적합한 프로그램을 구현하는 데 도움을 줌
+
+서브집합 구하는 함수
+
+- input : `List<Integer> = {1, 4, 9}`
+- output : `List<List<Integer>> = {{}, {1}, {4}, {9}, {1, 4}, {1, 9}, {4, 9}, {1,4,9}}`
+
+```java
+static List<List<Integer>> subsets(List<Integer> list) {
+    // 입력 리스트가 비어있다면
+    if (list.isEmpty()) {
+        List<List<Integer>> ans = new ArrayList<>();
+        // 빈 리스트가 서브 집합
+        ans.add(Collections.emptyList());
+        return ans;
+    }
+    Integer fst = list.get(0);
+    List<Integer> rest = list.subList(1,list.size());
+    
+    // 빈 리스트가 아니면 먼저 하나의 요소를 꺼내고 나머지 요소의 모든 서브집합을 찾아서 subans 로 전달한다.
+    // subAns는 절반의 정답을포함한다.
+    List<List<Integer>> subAns = subsets(rest);
+    // 정답의 나머지 절반을 포함하는 subAns2는 subAns의 모든 리스트에 처음 꺼낸 요소를 앞에 추가해서 만든다.
+    List<List<Integer>> subAns2 = insertAll(fst, subAns);
+    // subans, subans2S 연결
+    return concat(subAns, subAns2);
+}
+```
+
+```java
+static List<List<Integer>> insertAll(Integer fst,
+                                     List<List<Integer>> lists) {
+    List<List<Integer>> result = new ArrayList<>();
+    for (List<Integer> list : lists) {
+        List<Integer> copyList = new ArrayList<>();
+        // 리스트를 복사한 다음에 복사한 리스트에 요소를 추가한다.
+        // 구조체가 가변이더라도 저수준 구조를 복사하진 않는다
+        // Integer는 가변이 아니다.
+        copyList.add(fst);
+        copyList.addAll(list);
+        result.add(copyList);
+    }
+    return result;
+}
+```
+- 호출자가 리스트를 복사하는 코드를 추가하는게 아니라 메소드 내부에서 처리해야 함수형으로 쓰기에 자연스러움
+
+1.
+  ```java
+  static List<List<Integer>> concat(List<List<Integer>> a,
+                                    List<List<Integer>> b) {
+      a.addAll(b);
+      return a;
+  }
+  ```
+2. 
+  ```java
+  static List<List<Integer>> concat(List<List<Integer>> a,
+                                    List<List<Integer>> b) {
+      List<List<Integer>> r = new ArrayList<>(a);
+      r.addAll(b);
+      return r;
+  }
+  ```
+
+- 첫 번째 버전의 `concat`은 순수 함수가 아님
+  - `concat(subans, subans2)`를 호출한 다음에 `subans`의 값을 다시 참조하지 않는다는 가정을 함
+  - 그렇지 않으면 값이 바뀔 수 있음
+  - 그렇지 않기 때문에 두 번째 버전보다 가벼움
+  - 잠재적인 버그가 있음
+- 두 번째 버전의 `concat`은 순수 함수
+  - 내부적으로는 리스트 `r`에 요소를 추가하는 변화가 발생하지만 반환 결과는 오로지 인수에 의해 이루어지며 인수의 정보는 변경하지 않는다
+
+인수에 의해 출력이 결정되는 함수형 메서드의 관점에서 프로그램 문제를 생각하자
+
+- 무엇을 해야 하는가에 중점을 둔다
+- 설계 단계에서 어떻게 문제를 해결할 것이고 무엇을 변화할 것인지 결정하는 기존 방식에 비해 더 생산적일 때가 많다
+  - 설계 단계는 이와 같은 결정을 내리기에 너무 이른 상황이기 때문이다
+
 ## 18.3 재귀와 반복
+
+재귀
+
+- 무엇을 해야 하는가에 집중할수 있도록 도움을 주는 함수형 프로그래밍의 한 기법
+
+순수 함수형 프로그래밍 언어에서는 `while`, `for` 같은 반복문을 포함하지 않는다.
+
+- 이러한 반복문 때문에 변화가 자연스럽게 코드에 스며들 수 있기 때문
+  - `while`루프의 조건문을 갱신해야 할 때가 있다. 그렇지 않으면 루프가 아예 실행되지 않거나 무한으로 반복될 수 있다
+  - 이 외의 일반적인 상황에서는 루프를 안전하게 사용할 수 있다
+  - 함수형 스타일에서는 다른 누군가가 변화를 알아차리지만 못한다면 아무 상관이 없다
+    - 지역 변수는 자유롭게 갱신할 수 있다
+```java
+Iterator<Apple> it = apples.iterator();
+while (it.hasNext()) {
+   Apple apple = it.next();
+   // ...
+}
+```
+- 호출자는 변화를 확인할 수 없으므로 아무 문제가 없다
+  - `next`로 `Iterator`의 상태를 변환했고, `while` 바디 내부에서 `apple` 변수에 할당하는 동작을 할 수 있다
+```java
+public void searchForGold(List<String> l, Stats stats){
+    for(String s: l){
+        if("gold".equals(s)){
+            stats.incrementFor("gold");
+        }
+    }
+}
+```
+- 루프의 바디에서 함수형과 상충하는 부작용이 발생한다.
+  - 루프 내부에서 프로그램의 다른 부분과 공유되는 `stats` 객체의 상태를 변화시킨다.
+
+이러한 문제 때문에 하스켈 같은 순수 함수형 프로그래밍 언어에서는 부작용 연산을 원천적으로 제거
+
+혹은 재귀를 이용
+
+- 이론적으로 반복을 이용하는 모든 프로그램은 재귀로도 구현할 수 있다
+- 재귀를 이용하면 변화가 일어나지 않는다
+- 루프 단계마다 갱신되는 반복 변수를 제거할 수 있다
+
+```java
+static long factorialIterative(long n) {
+    long r = 1;
+    for (int i = 1; i <= n; i++) {
+        r *= i;
+    }
+    return r;
+}
+```
+- 일반적인 루프를 사용한 코드로 매 반복마다 변수 `r`과 `i`가 갱신
+```java
+static long factorialStreams(long n){
+    return LongStream.rangeClosed(1, n)
+                     .reduce(1, (long a, long b) -> a * b);
+}
+```
+- 스트림
+```java
+static long factorialRecursive(long n) {
+    return n == 1 ? 1 : n * factorialRecursive(n-1);
+}
+```
+- 재귀(자신을 호출하는 함수)방식의 코드로 좀 더 수학적인 형식으로 문제를 해결
+  - 반복코드보다 재귀 코드가 더 비싸다.
+    - `factorialRecursive` 함수를 호출할 때마다 호출 스택에 각 호출시 생성되는 정보를 저장할 새로운 스택 프레임이 만들어진다.
+    - 재귀 팩토리얼의 입력값에 비례해서 메모리 사용량이 증가한다.
+    - 따라서 큰 입력값을 사용하면 다음처럼 `StackOverflowError` 가 발생한다.
+    - `Exception in thread "main" java.lang.StackOverflowError`
+  - 함수형 언어에서는 꼬리 호출 최적화(tail call optimization) 라는 해결책을 제공
+```java
+static long factorialTailRecursive(long n) {
+    return factorialHelper(1, n);
+}
+static long factorialHelper(long acc, long n) {
+    return n == 1 ? acc : factorialHelper(acc * n, n-1);
+}
+```
+
+- `factorialHelper`에서 재귀 호출이 가장 마지막에서 이루어지므로 꼬리 재귀다.
+  - 중간 결과를 각각의 스택 프레임으로 저장해야 하는 일반 재귀와 달리 꼬리 재귀에서는 컴파일러가 하나의 스택 프레임을 재활용할 가능성이 생긴다.
+  - `factorialHelper`의 정의에서는 중간 결과(팩토리얼의 부분결과)를 함수의 인수로 직접 전달한다.
+- `factorialRecursive`에서 마지막으로 수행한 연산은 `n`과 재귀 호출의 결과값의 곱셈이다.
+- [그림 18-5] 여러 스택 프레임을 사용하는 팩토리얼의 재귀 정의
+- ![Figure 18.5. Recursive definition of factorial, which requires several stack frames](https://drek4537l1klr.cloudfront.net/urma2/Figures/18fig05_alt.jpg)
+- [그림 18-6] 단일 스택 프레임을 재사용하는 팩토리얼의 꼬리 재귀 정의
+- ![Figure 18.6. Tail-recursive definition of factorial, which can reuse a single stack frame](https://drek4537l1klr.cloudfront.net/urma2/Figures/18fig06_alt.jpg)
+- 안타깝게도 자바는 이와 같은 최적화를 제공하지 않는다
+  - 그럼에도 여전히 고전적인 재귀보다는 여러 컴파일러 최적화 여지를 남겨둘 수 있는 꼬리 재귀를 적용하는 것이 좋다
+- 스칼라, 그루비 같은 최신 JVM 언어는 이와 같은 재귀를 반복으로 변환하는 최적화를 제공한다(속도의 손실 없이).
+  - 결과적으로 순수 함수형을 유지하면서도 유용성뿐 아니라 효율성까지 두 마리의 토끼를 모두 잡을수 있다
+
+### 결론
+
+- 자바 8에서는 반복을 스트림으로 대체해서 변화를 피할 수 있다.
+- 또한 반복을 재귀로 바꾸면 더 간결하고, 부작용이 없는 알고리즘을 만들 수 있다.
+- 재귀를 이용하면 좀 더 쉽게 읽고, 쓰고, 이해할 수 있는 예제를 만들 수 있다.
+- 약간의 실행시간 차이보다는 프로그래머의 효율성이 더 중요할 때도 많다.
 
 ## 18.4 마치며
 
